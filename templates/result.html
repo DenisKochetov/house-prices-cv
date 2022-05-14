@@ -1,0 +1,19 @@
+
+<html>
+<head>
+<title>Result</title>
+</head>
+<body>
+<h1>Result</h1>
+<p>
+    <img src="{{image_name}}" alt="">
+<!--  -->
+<img src="{{ url_for('static', filename=image_name) }}" />
+
+</p>
+<h2>
+    {{result}}
+</h2>
+</body>
+
+</html>
