@@ -1,8 +1,10 @@
 from flask import Flask
+import pandas as pd
+
 from flask import render_template, request, redirect, url_for
 import os
 import numpy as np
-from model import model, predict_labels, load_image, tile_images
+from model import model, catboost, predict_labels, load_image, tile_images
 import flash
 from werkzeug.utils import secure_filename, send_from_directory
 
@@ -11,6 +13,9 @@ ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+df = pd.read_csv('houses.csv')
+
 
 
 def allowed_file(filename):
@@ -23,9 +28,23 @@ def allowed_file(filename):
 @app.route('/', methods=['GET', 'POST'])
 def image_preprocess():
     if request.method == 'POST':
-        # check if the post request has the file part
-       
-        # files = request.files['file']
+        rooms = float(request.form['rooms'])
+        baths = float(request.form['baths'])
+        square = float(request.form['square'])
+        zip = float(request.form['zip'])
+        answers = [rooms, baths, square, zip]
+        answers = [float(i) for i in answers]
+        print(answers)
+        # get column value of first row from df with condition
+
+        true_price = (df['price'][(df['rooms'] == rooms) & (df['baths'] == baths) & (df['square'] == square) & (df['post'] == zip)])
+        price = catboost.predict(answers)
+        if len(true_price) != 0:
+            percent = str(round(abs(true_price - price) / true_price * 100, 2)) + '%'
+        else:
+            percent = 'New house'
+        price = round(price, 2)
+        
         files = request.files.getlist('files[]')
         file_list = []
         for file in files:
@@ -43,19 +62,18 @@ def image_preprocess():
         file = tile_images(file_list)
         # file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
         return redirect(url_for('uploaded_file',
-                                    filename=filename))
+                                    filename=filename, price=price, percent=percent))
     return render_template('img_preprocessing.html')                                    
                                 
 
-@app.route('/uploads/<filename>')
-def uploaded_file(filename):
-
+@app.route('/uploads/<filename>_<price>_<percent>')
+def uploaded_file(filename, price, percent):
 
     img = load_image('static/uploads/'+filename)
     txt = predict_labels(model, img)
     filepath = 'uploads/'+filename
     # render template result with image     
-    return render_template('result.html', image_name=filepath, result=txt)
+    return render_template('result.html', image_name=filepath, result=txt, price=price, percent=percent)
 
 
 

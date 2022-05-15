@@ -8,6 +8,8 @@ from keras.preprocessing.image import img_to_array
 from keras.applications.vgg16 import preprocess_input
 from keras.applications.vgg16 import decode_predictions
 from keras.applications.vgg16 import VGG16
+from catboost import CatBoostRegressor
+
 
 # load the model
 # model = VGG16() 
@@ -15,7 +17,12 @@ from keras.applications.vgg16 import VGG16
 # save model as pickle
 # model.save('model.h5')
 
+
+
 model = keras.models.load_model('model.h5')
+catboost = CatBoostRegressor()      # parameters not required.
+catboost.load_model('catboost')
+
 
 def tile_images(files_list, size=128):
   houses = []
