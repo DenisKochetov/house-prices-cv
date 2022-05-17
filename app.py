@@ -1,12 +1,15 @@
 from flask import Flask
 import pandas as pd
-
+# from segmentation_model import get_building_img
 from flask import render_template, request, redirect, url_for
 import os
 import numpy as np
-from model import model, catboost, predict_labels, load_image, tile_images
+from model import catboost, load_image, tile_images
+from model import model, predict_labels
 import flash
-from werkzeug.utils import secure_filename, send_from_directory
+import torch
+from werkzeug.utils import secure_filename
+
 
 UPLOAD_FOLDER = 'static/uploads'
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
@@ -15,6 +18,7 @@ app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 df = pd.read_csv('houses.csv')
+torch.cuda.empty_cache()
 
 
 
@@ -70,10 +74,21 @@ def image_preprocess():
 def uploaded_file(filename, price, percent):
 
     img = load_image('static/uploads/'+filename)
+
     txt = predict_labels(model, img)
+    # filepath = 'uploads/'+filename
+
+
     filepath = 'uploads/'+filename
-    # render template result with image     
-    return render_template('result.html', image_name=filepath, result=txt, price=price, percent=percent)
+    filename = filename.replace('kitchen', 'frontal')
+    building_path = 'building/'+filename
+
+    # filepath = 'static/uploads/2_frontal.jpg'
+
+    # building_path = get_building_img(filepath)
+    # return render_template('result.html', image_name=filepath, result=txt, price=price, percent=percent)
+    return render_template('result.html', image_name=filepath, build_name=building_path, result=txt, price=price, percent=percent)
+
 
 
 
