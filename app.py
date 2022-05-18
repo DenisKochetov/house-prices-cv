@@ -41,10 +41,13 @@ def image_preprocess():
         print(answers)
         # get column value of first row from df with condition
 
-        true_price = (df['price'][(df['rooms'] == rooms) & (df['baths'] == baths) & (df['square'] == square) & (df['post'] == zip)])
+        true_price = (df['price'][(df['rooms'] == rooms) & (df['baths'] == baths) & (df['square'] == square) & (df['post'] == zip)]).values
         price = catboost.predict(answers)
         if len(true_price) != 0:
-            percent = str(round(abs(true_price - price) / true_price * 100, 2)) + '%'
+        # if true_price != np.nan:
+            percent = (round(abs(true_price[0] - price) / true_price[0] * 100, 2))
+            print(percent)
+           
         else:
             percent = 'New house'
         price = round(price, 2)
@@ -72,46 +75,19 @@ def image_preprocess():
 
 @app.route('/uploads/<filename>_<price>_<percent>')
 def uploaded_file(filename, price, percent):
+    print(percent)
+
 
     img = load_image('static/uploads/'+filename)
-
+    
     txt = predict_labels(model, img)
-    # filepath = 'uploads/'+filename
-
 
     filepath = 'uploads/'+filename
     filename = filename.replace('kitchen', 'frontal')
     building_path = 'building/'+filename
 
-    # filepath = 'static/uploads/2_frontal.jpg'
 
-    # building_path = get_building_img(filepath)
-    # return render_template('result.html', image_name=filepath, result=txt, price=price, percent=percent)
     return render_template('result.html', image_name=filepath, build_name=building_path, result=txt, price=price, percent=percent)
-
-
-
-
-
-
-# add progress bar page
-@app.route('/progress_bar')
-def progress_bar():
-    return '''
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <title>Progress Bar</title>
-    </head>
-    <body>
-        <h1>Progress Bar</h1>
-        <div class="progress">
-            <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100" style="width: 75%"></div>
-        </div>
-    </body>
-    </html>
-    '''
-
 
 
 
